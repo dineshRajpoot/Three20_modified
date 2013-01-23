@@ -106,6 +106,8 @@ static const CGFloat kUITextViewVerticalPadding = 6.0f;
 - (void)createTextView {
   if (!_textView) {
     _textView = [[TTTextView alloc] init];
+      if(_textField.inputView)
+          _textView.inputView=_textField.inputView;
     _textView.delegate = _internal;
     _textView.editable = YES;
     _textView.backgroundColor = [UIColor clearColor];
@@ -481,6 +483,33 @@ static const CGFloat kUITextViewVerticalPadding = 6.0f;
       [scrollView scrollRectToVisible:CGRectMake(0,0,1,1) animated:NO];
     }
   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)setInputview:(UIView*)inputView1 {
+    if (_textView) {
+        _textView.inputView = inputView1;
+        [_textView reloadInputViews];
+        return;
+    }
+
+    if (_textField) {
+        _textField.inputView = inputView1;
+        [_textField reloadInputViews];
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)removeInputView {
+    if (_textField.inputView) {
+        _textField.inputView = nil;
+        [_textField reloadInputViews];
+    }
+    if (_textView.inputView) {
+        _textView.inputView = nil;
+        [_textView reloadInputViews];
+
+    }
 }
 
 

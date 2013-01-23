@@ -111,7 +111,9 @@
   TTStyledTextParser* parser = [[[TTStyledTextParser alloc] init] autorelease];
   parser.parseLineBreaks = lineBreaks;
   parser.parseURLs = URLs;
-  [parser parseXHTML:source];
+  //[parser parseXHTML:source];
+  [parser parseXHTML:[source stringByReplacingOccurrencesOfString:@"&" withString:@"&amp;"]];
+
   if (parser.rootNode) {
     return [[[TTStyledText alloc] initWithNode:parser.rootNode] autorelease];
 

@@ -50,7 +50,7 @@
 
 // The general purpose logger. This ignores logging levels.
 #ifdef DEBUG
-  #define TTDPRINT(xx, ...)  NSLog(@"%s(%d): " xx, __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
+  #define TTDPRINT(xx, ...)  //////////NSLog(@"%s(%d): " xx, __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
 #else
   #define TTDPRINT(xx, ...)  ((void)0)
 #endif // #ifdef DEBUG

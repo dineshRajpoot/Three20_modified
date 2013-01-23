@@ -52,5 +52,7 @@
 @property (nonatomic, assign) id<TTTextEditorDelegate> delegate;
 
 - (void)scrollContainerToCursor:(UIScrollView*)scrollView;
+-(void)setInputview:(UIView*)inputView1;
+-(void)removeInputView;
 
 @end
