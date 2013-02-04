@@ -490,7 +490,6 @@ static const CGFloat kUITextViewVerticalPadding = 6.0f;
     if (_textView) {
         _textView.inputView = inputView1;
         [_textView reloadInputViews];
-        return;
     }
 
     if (_textField) {
