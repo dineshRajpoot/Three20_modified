@@ -110,6 +110,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)parseURLs:(NSString*)string {
+
+    //NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"(http?://([-\\w\\.]+)+(:\\d+)?(/([\\w/_\\.]*(\\?\\S+)?)?)?)|(@\\w+)" options:NSRegularExpressionCaseInsensitive error:&error];
+    
   NSInteger stringIndex = 0;
 
   while (stringIndex < string.length) {
@@ -132,8 +135,9 @@
 
     if (startRange.location == NSNotFound) {
       NSString* text = [string substringWithRange:searchRange];
-      TTStyledTextNode* node = [[[TTStyledTextNode alloc] initWithText:text] autorelease];
-      [self addNode:node];
+      
+        [self parseAtTag:text];
+        stringIndex = [text length] - 1;     
       break;
 
     } else {
@@ -141,8 +145,9 @@
         startRange.location - searchRange.location);
       if (beforeRange.length) {
         NSString* text = [string substringWithRange:beforeRange];
-        TTStyledTextNode* node = [[[TTStyledTextNode alloc] initWithText:text] autorelease];
-        [self addNode:node];
+         
+          [self parseAtTag:text];
+          stringIndex = [text length] - 1;
       }
 
       NSRange subSearchRange = NSMakeRange(startRange.location,
@@ -151,7 +156,7 @@
                                  range:subSearchRange];
       if (endRange.location == NSNotFound) {
         NSString* URL = [string substringWithRange:subSearchRange];
-        TTStyledLinkNode* node = [[[TTStyledLinkNode alloc] initWithText:URL] autorelease];
+          TTStyledLinkNode* node = [[[TTStyledLinkNode alloc] initWithText:URL] autorelease];
         node.URL = URL;
         [self addNode:node];
         break;
@@ -167,6 +172,125 @@
       }
     }
   }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)parseAtTag:(NSString *)string
+{
+    NSError *error = nil;
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"(@\\w+)" options:0 error:&error];
+    NSArray *matches = [regex matchesInString:string options:0 range:NSMakeRange(0, string.length)];
+    
+    
+    if([matches count] == 0)
+    {
+        // This text does not have any @tag .. Search for hash tag
+        [self parseHashTag:string];
+        return;
+    }
+    
+    int start = 0;
+    int totalvalues = 0;
+    
+    for (NSTextCheckingResult *match in matches)
+    {
+        NSRange wordRange = [match rangeAtIndex:1];
+        
+        if(wordRange.location == 0)
+        {
+            // Its a @tag
+            NSString* atTagText = [string substringWithRange:wordRange];
+            TTStyledLinkNode* node = [[[TTStyledLinkNode alloc] initWithText:atTagText] autorelease];
+            node.URL = atTagText;
+            [self addNode:node];
+
+            start = wordRange.location + wordRange.length;
+        }
+        else
+        {
+            NSRange normalTextRange = NSMakeRange(start, wordRange.location - start);
+            NSString *normalText = [string substringWithRange:normalTextRange];
+            [self parseHashTag:normalText];
+            
+            // This is @tag
+            NSString* atTagText = [string substringWithRange:wordRange];
+                        //NSLog(@"hash tag in between:%@", atTagText);
+            TTStyledLinkNode* node1 = [[[TTStyledLinkNode alloc] initWithText:atTagText] autorelease];
+            node1.URL = atTagText;
+            [self addNode:node1];
+
+            start = wordRange.location + wordRange.length;
+        }
+        totalvalues++;
+        
+        if(totalvalues == [matches count])
+        {
+            //No more hashTag .. get some additional text
+            NSString* normalText1 = [string substringFromIndex:start];
+            [self parseHashTag:normalText1];
+        }
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+- (void)parseHashTag:(NSString *)string
+{
+    NSError *error = nil;
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"(#\\w+)" options:0 error:&error];
+    NSArray *matches = [regex matchesInString:string options:0 range:NSMakeRange(0, string.length)];
+    
+    
+    if([matches count] == 0)
+    {
+        // This text does not have any hashtag .. use it as it is
+        TTStyledTextNode* node = [[[TTStyledTextNode alloc] initWithText:string] autorelease];
+        [self addNode:node];
+        return;
+    }
+    
+    int start = 0;
+    int totalvalues = 0;
+    
+    for (NSTextCheckingResult *match in matches)
+    {
+        NSRange wordRange = [match rangeAtIndex:1];
+        
+        if(wordRange.location == 0)
+        {
+            // Its a Hash tag
+            NSString* hashTagText = [string substringWithRange:wordRange];
+            TTStyledLinkNode* node = [[[TTStyledLinkNode alloc] initWithText:hashTagText] autorelease];
+            node.URL = hashTagText;
+            [self addNode:node];
+            start = wordRange.location + wordRange.length;
+        }
+        else
+        {
+            NSRange normalTextRange = NSMakeRange(start, wordRange.location - start);
+            NSString *normalText = [string substringWithRange:normalTextRange];
+            TTStyledTextNode* node = [[[TTStyledTextNode alloc] initWithText:normalText] autorelease];
+            [self addNode:node];
+            
+            // This is hash tag
+            NSString* hashTagText = [string substringWithRange:wordRange];
+            TTStyledLinkNode* node1 = [[[TTStyledLinkNode alloc] initWithText:hashTagText] autorelease];
+            node1.URL = hashTagText;
+            [self addNode:node1];
+            
+            start = wordRange.location + wordRange.length;
+        }
+        totalvalues++;
+        
+        if(totalvalues == [matches count])
+        {
+            //No more hashTag .. get some additional text
+            NSString* normalText1 = [string substringFromIndex:start];
+            TTStyledTextNode* node2 = [[[TTStyledTextNode alloc] initWithText:normalText1] autorelease];
+            [self addNode:node2];
+        }
+    }
 }
 
 
